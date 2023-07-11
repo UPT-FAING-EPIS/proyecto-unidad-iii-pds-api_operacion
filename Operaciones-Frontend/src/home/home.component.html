@@ -1,0 +1,514 @@
+<div class="container-fluid">
+  <h2 class="text-center text-bg-dark p-3">Operaciones Bancarias</h2>
+  <!-- Consultar Saldo -->
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-4">
+        <form
+          #consultaForm="ngForm"
+          (ngSubmit)="this.consultarSaldo(consultaForm)"
+          class="row g-3"
+        >
+          <div class="col-auto">
+            <input
+              type="text"
+              name="numeroCuenta"
+              ngModel
+              class="form-control"
+              placeholder="Ingrese número de cuenta"
+            />
+          </div>
+          <div class="col-auto">
+            <button
+              [disabled]="consultaForm.invalid || (this.isLoading$ | async)"
+              type="submit"
+              class="btn btn-secondary"
+            >
+              <i
+                *ngIf="this.isLoading$ | async"
+                class="fas fa-spinner fa-spin"
+              ></i>
+              <span *ngIf="this.isLoading$ | async">Consultando...</span>
+              <span *ngIf="!(this.isLoading$ | async)">Consultar</span>
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="col-8">
+        <ng-container
+          *ngIf="appStateConsultaSaldo$ | async as appState"
+          [ngSwitch]="appState.dataState"
+        >
+          <ng-container *ngSwitchCase="DataState.LOADING_STATE">
+            <div class="col-md-12 single-note-item text-center">
+              <div class="spinner-border text-info" role="status"></div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="DataState.LOADED_STATE">
+            <div class="card">
+              <div class="card-header text-bg-secondary">
+                Cuenta Bancaria #{{ appState.appData.data.cuentaBancaria.id }}
+              </div>
+              <div class="row g-0">
+                <div
+                  class="col-1 d-flex justify-content-center align-items-center"
+                >
+                  <img
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMx1itTXTXLB8p4ALTTL8mUPa9TFN_m9h5VQ&usqp=CAU"
+                    height="40px"
+                    alt="..."
+                  />
+                </div>
+                <div class="col-11">
+                  <div class="card-body  d-flex justify-content-between fst-italic">
+                    <span class="fs-5">
+                      Numero de Cuenta:
+                      {{ appState.appData.data.cuentaBancaria.numeroCuenta }}
+                    </span>
+                    <span class="fs-4">
+                      Saldo:
+                      {{
+                        appState.appData.data.cuentaBancaria.saldo
+                          | currency: 'S/. '
+                      }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="DataState.ERROR_STATE">
+            <div class="card">
+              <div class="card-header text-bg-secondary">
+                Cuenta Bancaria No existe
+              </div>
+              <div class="card-body">
+                <div class="alert-danger">
+                  {{ appState.error }}
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Administrar TRANSACCIONES -->
+  <div class="row">
+    <div class="col-6">
+      <div class="table-responsive">
+        <div class="table-wrapper">
+          <div class="table-title">
+            <div class="row">
+              <div class="col-sm-12 mb-3">
+                <h2 class="text-center">Administrar Transacciones</h2>
+              </div>
+              <div class="col-sm-12 d-flex">
+                <div class="row d-flex w-100">
+                  <div>
+                    <form
+                      #transaccionesByNumeroCuentaForm="ngForm"
+                      (ngSubmit)="
+                        this.getTransaccionesByNumeroCuenta(
+                          transaccionesByNumeroCuentaForm
+                        )
+                      "
+                      class="row g-3 d-flex justify-content-between"
+                    >
+                      <div class="col-auto">
+                        <a
+                          data-bs-toggle="modal"
+                          data-bs-target="#addEmployeeModal"
+                          class="btn btn-success w-auto"
+                        >
+                          <i class="material-icons">&#xE147;</i>
+                          <span>Nueva Transacción</span>
+                        </a>
+                        <button
+                          type="button"
+                          class="btn btn-outline-warning"
+                          (click)="getAllTransacciones()"
+                        >
+                          Listar Todos
+                        </button>
+                      </div>
+                      <div class="col-auto">
+                        <div class="row">
+                          <div class="col-auto">
+                            <input
+                              type="text"
+                              name="numeroCuenta"
+                              ngModel
+                              class="form-control form-control-sm"
+                              placeholder="Ingrese número de cuenta"
+                            />
+                          </div>
+                          <div class="col-auto">
+                            <button
+                              [disabled]="
+                                transaccionesByNumeroCuentaForm.invalid ||
+                                (this.isLoadingTransferenciaByNumeroCuenta$
+                                  | async)
+                              "
+                              type="submit"
+                              class="btn btn-info w-auto"
+                            >
+                              <i
+                                *ngIf="
+                                  this.isLoadingTransferenciaByNumeroCuenta$
+                                    | async
+                                "
+                                class="fas fa-spinner fa-spin"
+                              ></i>
+                              <span
+                                *ngIf="
+                                  this.isLoadingTransferenciaByNumeroCuenta$
+                                    | async
+                                "
+                                >Consultando...</span
+                              >
+                              <span
+                                *ngIf="
+                                  !(
+                                    this.isLoadingTransferenciaByNumeroCuenta$
+                                    | async
+                                  )
+                                "
+                                >Consultar</span
+                              >
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ng-container
+            *ngIf="appState$ | async as appState"
+            [ngSwitch]="appState.dataState"
+          >
+            <ng-container *ngSwitchCase="DataState.LOADING_STATE">
+              <div class="col-md-12 single-note-item text-center">
+                <div class="spinner-border text-info" role="status"></div>
+              </div>
+            </ng-container>
+            <ng-container *ngSwitchCase="DataState.LOADED_STATE">
+              <table
+                class="table table-stripped table-hover"
+                id="transacciones"
+              >
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Id</th>
+                    <th>Fecha de Transacción</th>
+                    <th>Monto</th>
+                    <th>Tipo</th>
+                  </tr>
+                </thead>
+                <tbody
+                  *ngFor="
+                    let transaccion of appState.appData.data.transacciones;
+                    let i = index
+                  "
+                >
+                  <tr>
+                    <td>
+                      <img
+                        src="https://cdn-icons-png.flaticon.com/512/2878/2878547.png"
+                        alt="sada"
+                        width="40"
+                        height="40"
+                      />
+                    </td>
+                    <td>{{ transaccion.id }}</td>
+                    <td>{{ transaccion.fechaHoraTransaccion }}</td>
+                    <td>{{ transaccion.monto | currency: 'S/. ' }}</td>
+                    <td>
+                      <span
+                        *ngIf="transaccion.tipo == 'DEPOSITO'"
+                        class="badge text-bg-success"
+                      >
+                        {{ transaccion.tipo }}
+                      </span>
+                      <span
+                        *ngIf="transaccion.tipo == 'RETIRO'"
+                        class="badge text-bg-danger"
+                      >
+                        {{ transaccion.tipo }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-container>
+            <ng-container *ngSwitchCase="DataState.ERROR_STATE">
+              <div class="alert-danger">
+                {{ appState.error }}
+              </div>
+            </ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trasnferencias Table -->
+    <div class="col-6">
+      <div class="table-responsive">
+        <div class="table-wrapper">
+          <div class="table-title">
+            <div class="row">
+              <div class="col-sm-5">
+                <h2>Administrar Transferencias</h2>
+              </div>
+              <div class="col-sm-7">
+                <a
+                  data-bs-toggle="modal"
+                  data-bs-target="#nuevaTransferencia"
+                  class="btn btn-primary"
+                >
+                  <i class="material-icons">&#xE147;</i>
+                  <span>Nueva Transferencia</span>
+                </a>
+              </div>
+            </div>
+          </div>
+          <ng-container
+            *ngIf="appStateTransferencias$ | async as appState"
+            [ngSwitch]="appState.dataState"
+          >
+            <ng-container *ngSwitchCase="DataState.LOADING_STATE">
+              <div class="col-md-12 single-note-item text-center">
+                <div class="spinner-border text-info" role="status"></div>
+              </div>
+            </ng-container>
+            <ng-container *ngSwitchCase="DataState.LOADED_STATE">
+              <table
+                class="table table-stripped table-hover"
+                id="transferencias"
+              >
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Id</th>
+                    <th>Fecha de Tranferencia</th>
+                    <th>Monto</th>
+                    <th>Cuenta Origen</th>
+                    <th class="w-auto">Cuenta Destino</th>
+                  </tr>
+                </thead>
+                <tbody
+                  *ngFor="
+                    let transferencia of appState.appData.data.transferencias;
+                    let i = index
+                  "
+                >
+                  <tr>
+                    <td>
+                      <img
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSM4fNE0ctnQi1-xm9GwCQhWmqrt_84U_YkYA&usqp=CAU"
+                        alt="sada"
+                        width="40"
+                        height="40"
+                      />
+                    </td>
+                    <td>{{ transferencia.id }}</td>
+                    <td>{{ transferencia.fechaHoraTransaccion }}</td>
+                    <td>{{ transferencia.monto | currency: 'S/. ' }}</td>
+                    <td>{{ transferencia.cuentaOrigen }}</td>
+                    <td>{{ transferencia.cuentaDestino }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-container>
+            <ng-container *ngSwitchCase="DataState.ERROR_STATE">
+              <div class="alert-danger">
+                {{ appState.error }}
+              </div>
+            </ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add transaccion Modal HTML -->
+
+<div
+  id="addEmployeeModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form
+        #transaccionForm="ngForm"
+        (ngSubmit)="this.saveTransaccion(transaccionForm)"
+      >
+        <div class="modal-header">
+          <h4 class="modal-title">Realizar Nueva transaccion</h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Monto</label>
+            <input
+              type="text"
+              ngModel
+              name="monto"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Tipo de operación</label>
+            <select ngModel="DEPOSITO" name="tipo" class="form-select" required>
+              <option value="DEPOSITO">DEPOSITO</option>
+              <option value="RETIRO">RETIRO</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6">
+              <div class="form-group">
+                <label>Numero de Cuenta</label>
+                <input
+                  type="text"
+                  ngModel
+                  name="numeroCuenta"
+                  class="form-control"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-warning"
+            id="closeModal"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button
+            [disabled]="transaccionForm.invalid || (this.isLoading$ | async)"
+            type="submit"
+            class="btn btn-success"
+          >
+            <i
+              *ngIf="this.isLoading$ | async"
+              class="fas fa-spinner fa-spin"
+            ></i>
+            <span *ngIf="this.isLoading$ | async">Saving...</span>
+            <span *ngIf="!(this.isLoading$ | async)">Add</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Nueva transferencia  -->
+
+<div
+  id="nuevaTransferencia"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form
+        #transferenciaForm="ngForm"
+        (ngSubmit)="this.guardarTransferencia(transferenciaForm)"
+      >
+        <div class="modal-header">
+          <h4 class="modal-title">Realizar Nueva Transferencia</h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Monto</label>
+            <input
+              type="text"
+              ngModel
+              name="monto"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="row">
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6">
+              <div class="form-group">
+                <label>Numero de Cuenta Destino</label>
+                <input
+                  type="text"
+                  ngModel
+                  name="cuentaDestino"
+                  class="form-control"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6">
+              <div class="form-group">
+                <label>Numero de Cuenta Origen</label>
+                <input
+                  type="text"
+                  ngModel
+                  name="cuentaOrigen"
+                  class="form-control"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-warning"
+            id="closeModal2"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button
+            [disabled]="transferenciaForm.invalid || (this.isLoading$ | async)"
+            type="submit"
+            class="btn btn-success"
+          >
+            <i
+              *ngIf="this.isLoading$ | async"
+              class="fas fa-spinner fa-spin"
+            ></i>
+            <span *ngIf="this.isLoading$ | async">Saving...</span>
+            <span *ngIf="!(this.isLoading$ | async)">Add</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<ngx-notifier></ngx-notifier>
